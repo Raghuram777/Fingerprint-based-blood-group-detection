@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import os
+import json
 
 # --------------------
 # Step 1: Load Saved Model
@@ -10,17 +11,27 @@ model = tf.keras.models.load_model("model.h5")
 print("✅ Model loaded successfully!")
 
 # --------------------
-# Step 2: Class Labels (must match training)
+# Step 2: Load Class Labels from class_indices_simple.json
 # --------------------
-class_labels = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-# You can update this if your folder names were different
+try:
+    with open("class_indices_simple.json") as f:
+        class_indices = json.load(f)
+    # Invert the mapping to get index -> label
+    index_to_label = {v: k for k, v in class_indices.items()}
+    # Ensure correct order
+    class_labels = [index_to_label[i] for i in range(len(index_to_label))]
+    print("✅ Loaded class labels from JSON:", class_labels)
+except FileNotFoundError:
+    # Fallback to manual order (alphabetical)
+    class_labels = ['A-', 'A+', 'AB-', 'AB+', 'B-', 'B+', 'O-', 'O+']
+    print("⚠️ Using fallback class labels:", class_labels)
 
 # --------------------
 # Step 3: Load and Preprocess Test Image
 # --------------------
 
 # 🔁 UPDATE this path to any image you want to test
-test_image_path = "fingerprint_data\AB+\cluster_4_5971.BMP"
+test_image_path = "fingerprint_data\A-\cluster_0_32.BMP"
 
 if not os.path.exists(test_image_path):
     raise FileNotFoundError("❌ Test image not found. Check the path.")
